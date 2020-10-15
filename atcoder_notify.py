@@ -5,10 +5,27 @@ import requests
 from bs4 import BeautifulSoup as bs
 import re
 import urllib.parse
+import os
 import sys
 import datetime
 import locale
 locale.setlocale(locale.LC_TIME, 'ja_JP.UTF-8')
+
+known_contests_filename = os.path.join(os.environ['HOME'], 'var/atcoder_notify/known_contests.txt')
+
+def read_known_contests():
+    if known_contests_filename and os.path.exists(known_contests_filename):
+        with open(known_contests_filename) as f:
+            return set(map(lambda x: x.strip(), f.readlines()))
+    else:
+        return set()
+
+def write_known_contests(urls):
+    if known_contests_filename:
+        with open(known_contests_filename, 'w') as f:
+            for url in urls:
+                print(url, file=f)
+
 r=requests.get("https://atcoder.jp/contests/")
 soup=bs(r.text,"lxml")
 #print(soup.body)
@@ -74,5 +91,9 @@ def info2post(info):
     post_message = '\n'.join([name, date_line, link, rated_line])
     return post_message
 
-message = '\n######\n'.join([info2post(info) for info in get_contest_info(upcoming_contests)])
+contest_info = get_contest_info(upcoming_contests)
+known_contests = read_known_contests()
+new_contest_info = list(filter(lambda info: not info[3] in known_contests, contest_info))
+message = '\n######\n'.join([info2post(info) for info in new_contest_info])
+write_known_contests([info[3] for info in contest_info])
 print(message)
