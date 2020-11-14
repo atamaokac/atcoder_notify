@@ -105,6 +105,18 @@ if __name__ == '__main__':
                         help='pick-up only rated contests, default={}.'.format(rated_only))
     parser.add_argument('--savefile', default=diff_info_filename,
                         help='filename to load & save, default={}.'.format(diff_info_filename))
+    parser.add_argument('--slack', action='store_true',
+                        help='slack channel to post.')
+    parser.add_argument('-c', '--channel', default=None,
+                        help='slack channel to post.')
+    parser.add_argument('--slacktoken', default=None,
+                        help='slack bot token.')
+    parser.add_argument('--slacktokenfile', default=None,
+                        help='file including slack bot token.')
+    parser.add_argument('--ts', default=None,
+                        help='specify the thread ts.')
+    parser.add_argument('--mute', help='post in thread without showing on channel.',
+                        action='store_true')
     args = parser.parse_args()
     scope_days = args.scopedays
     rated_only = args.ratedonly
@@ -125,9 +137,13 @@ if __name__ == '__main__':
     upcoming_contests = get_upcoming_contests()
     upcoming_contests_info = get_contest_info(upcoming_contests)
     new_contests_info = [ info for info in upcoming_contests_info if not info in diff_info ]
-    message = '\n######\n'.join([info2post(info) for info in new_contests_info])
-    if message:
-        print(message)
+    if args.slack:
+        for info in new_contests_info:
+            
+    else:
+        message = '\n######\n'.join([info2post(info) for info in new_contests_info])
+        if message:
+            print(message)
 
     ##現時点での開催予定コンテストを保存
     with open(diff_info_filename, 'wb') as f:
